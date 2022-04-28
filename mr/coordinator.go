@@ -221,7 +221,9 @@ func (c *Coordinator) AckTask(args *AckTaskArgs, _ *AckTaskReply) error {
 		task.Status = Complete
 		mr := c.mrs[args.MRID]
 		for i, file := range args.Files {
+			mr.RTask[i].mu.Lock()
 			mr.RTask[i].Files = append(mr.RTask[i].Files, file)
+			mr.RTask[i].mu.Unlock()
 		}
 		fmt.Printf("mtask %s complete\n", task.GetTID())
 	case "R":
