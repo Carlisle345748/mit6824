@@ -1,5 +1,7 @@
 # MIT 6.824
 
+Reliably pass all the tests 100 times. If you like it please give me a star :smile:
+
 
 ### Lab 1 MapReduce
 - [X] MapReduce Coordinator and Worker
