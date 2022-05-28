@@ -12,13 +12,13 @@ import (
 )
 
 var clientIDCounter = atomic.NewInt64(-1)
-var requestIDCounter = atomic.NewInt64(-1)
 
 type Clerk struct {
 	servers    []*labrpc.ClientEnd
 	id         string
 	leader     *atomic.Int64
 	roundRobin *atomic.Int64
+	ridCounter *atomic.Int64
 	logger     *Logger
 }
 
@@ -34,6 +34,7 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 	ck.servers = servers
 	ck.leader = atomic.NewInt64(-1)
 	ck.roundRobin = atomic.NewInt64(0)
+	ck.ridCounter = atomic.NewInt64(0)
 	ck.id = strconv.FormatInt(clientIDCounter.Inc(), 10)
 	ck.logger = NewLogger(Client, ck.id)
 	return ck
@@ -52,7 +53,7 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 // arguments. and reply must be passed as a pointer.
 //
 func (ck *Clerk) Get(key string) string {
-	requestID := strconv.Itoa(int(requestIDCounter.Inc()))
+	requestID := strconv.Itoa(int(ck.ridCounter.Inc()))
 	ck.logger.Infof("request_id=%s send GET, key=%s", requestID, key)
 	for {
 		arg := GetArgs{
@@ -94,7 +95,7 @@ func (ck *Clerk) Get(key string) string {
 // arguments. and reply must be passed as a pointer.
 //
 func (ck *Clerk) PutAppend(key string, value string, op string) {
-	requestID := strconv.Itoa(int(requestIDCounter.Inc()))
+	requestID := strconv.Itoa(int(ck.ridCounter.Inc()))
 	ck.logger.Infof("request_id=%s send PutAppend, key=%s, val=%s", requestID, key, value)
 	for {
 		arg := PutAppendArgs{

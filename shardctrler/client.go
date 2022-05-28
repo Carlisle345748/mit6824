@@ -14,13 +14,13 @@ import (
 )
 
 var clientIDCounter = atomic.NewInt64(-1)
-var requestIDCounter = atomic.NewInt64(-1)
 
 type Clerk struct {
 	servers    []*labrpc.ClientEnd
 	id         string
 	leader     *atomic.Int64
 	roundRobin *atomic.Int64
+	ridCounter *atomic.Int64
 	logger     *Logger
 }
 
@@ -37,6 +37,7 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 	// Your code here.
 	ck.leader = atomic.NewInt64(-1)
 	ck.roundRobin = atomic.NewInt64(0)
+	ck.ridCounter = atomic.NewInt64(0)
 	ck.id = strconv.FormatInt(clientIDCounter.Inc(), 10)
 	ck.logger = NewLogger(Client, ck.id)
 	return ck
@@ -45,7 +46,7 @@ func MakeClerk(servers []*labrpc.ClientEnd) *Clerk {
 func (ck *Clerk) Query(num int) Config {
 	args := &QueryArgs{
 		BaseArg: BaseArg{
-			RID: strconv.FormatInt(requestIDCounter.Inc(), 10),
+			RID: strconv.FormatInt(ck.ridCounter.Inc(), 10),
 			CID: ck.id,
 		},
 		Num: num,
@@ -72,7 +73,7 @@ func (ck *Clerk) Query(num int) Config {
 func (ck *Clerk) Join(servers map[int][]string) {
 	args := &JoinArgs{
 		BaseArg: BaseArg{
-			RID: strconv.FormatInt(requestIDCounter.Inc(), 10),
+			RID: strconv.FormatInt(ck.ridCounter.Inc(), 10),
 			CID: ck.id,
 		},
 		Servers: servers,
@@ -98,7 +99,7 @@ func (ck *Clerk) Join(servers map[int][]string) {
 func (ck *Clerk) Leave(gids []int) {
 	args := &LeaveArgs{
 		BaseArg: BaseArg{
-			RID: strconv.FormatInt(requestIDCounter.Inc(), 10),
+			RID: strconv.FormatInt(ck.ridCounter.Inc(), 10),
 			CID: ck.id,
 		},
 		GIDs: gids,
@@ -126,7 +127,7 @@ func (ck *Clerk) Leave(gids []int) {
 func (ck *Clerk) Move(shard int, gid int) {
 	args := &MoveArgs{
 		BaseArg: BaseArg{
-			RID: strconv.FormatInt(requestIDCounter.Inc(), 10),
+			RID: strconv.FormatInt(ck.ridCounter.Inc(), 10),
 			CID: ck.id,
 		},
 		Shard: shard,

@@ -22,7 +22,6 @@ import (
 )
 
 var clientIDCounter = atomic.NewInt64(-1)
-var requestIDCounter = atomic.NewInt64(-1)
 
 //
 // which shard is a key in?
@@ -52,6 +51,7 @@ type Clerk struct {
 	config     shardctrler.Config
 	leaders    sync.Map
 	roundRobin *atomic.Int64
+	ridCounter *atomic.Int64
 	make_end   func(string) *labrpc.ClientEnd
 	logger     *Logger
 	// You will have to modify this struct.
@@ -75,6 +75,7 @@ func MakeClerk(ctrlers []*labrpc.ClientEnd, make_end func(string) *labrpc.Client
 			Shards: [10]int{},
 			Groups: map[int][]string{},
 		},
+		ridCounter: atomic.NewInt64(0),
 		roundRobin: atomic.NewInt64(0),
 		make_end:   make_end,
 		logger:     NewClientLogger(Client, cid),
@@ -91,7 +92,7 @@ func MakeClerk(ctrlers []*labrpc.ClientEnd, make_end func(string) *labrpc.Client
 // You will have to modify this function.
 //
 func (ck *Clerk) Get(key string) string {
-	requestID := strconv.FormatInt(requestIDCounter.Inc(), 10)
+	requestID := strconv.FormatInt(ck.ridCounter.Inc(), 10)
 	for {
 		ck.mu.RLock()
 		args := GetArgs{
@@ -145,7 +146,7 @@ func (ck *Clerk) Get(key string) string {
 // You will have to modify this function.
 //
 func (ck *Clerk) PutAppend(key string, value string, op string) {
-	requestID := strconv.FormatInt(requestIDCounter.Inc(), 10)
+	requestID := strconv.FormatInt(ck.ridCounter.Inc(), 10)
 	for {
 		ck.mu.RLock()
 		args := PutAppendArgs{
